@@ -1,51 +1,53 @@
 /*
  * Linked List implementation
  */
+#include "common.h"
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+void insert(struct node **head, int val) {
+	struct node *tmp = NULL;
 
-
-struct list_node {
-	int val;
-	struct list_node *next;
-};
-
-struct list_node *head = (struct list_node *)NULL;
-
-void add(int val) {
-	struct list_node *tmp = (struct list_node *)malloc(sizeof(struct list_node));
-
-	tmp->next = head->next;
+	tmp = (struct node *)malloc(sizeof(struct node));
 	tmp->val = val;
-	head->next = tmp;
+	tmp->next = NULL;
+
+	tmp->next = (*head);
+	*head = tmp;
 }
 
-void del(int val) {
-	struct list_node *tmp, *prev;
+void append(struct node **head, int val) {
+	struct node *ptr = *head;
+	struct node *tmp = NULL;
 
-	tmp = head->next;
-	prev = head;
+	tmp = (struct node *)malloc(sizeof(struct node));
+	tmp->val = val;
+	tmp->next = NULL;
 
-	if (!tmp)
-		return;
+	if (!ptr) {
+		*head = tmp;
+	} else {
+		while (ptr->next)
+			ptr = ptr->next;
 
-	while (tmp) {
-		if (tmp->val == val) {
-			prev->next = tmp->next;
-			free(tmp);
-			break;
-		}
-		tmp = tmp->next;
-		prev = prev->next;
+		ptr->next = tmp;
 	}
 }
 
-void list(void) {
-	struct list_node *tmp = head->next;
+int search(struct node **head, int val) {
+	struct node *ptr = *head;
 
-	while(tmp) {
+	while (ptr) {
+		if (ptr->val == val)
+			return TRUE;
+		ptr = ptr->next;
+	}
+
+	return FALSE;
+}
+
+void print(struct node **head) {
+	struct node *tmp = *head;
+
+	while (tmp) {
 		printf("%d > ", tmp->val);
 		tmp = tmp->next;
 	}
@@ -53,75 +55,113 @@ void list(void) {
 	printf("NULL\n");
 }
 
-struct list_node *reverse(struct list_node *node) {
-	struct list_node *tmp;
+int length_iter(struct node **head) {
+	int len = 0;
+	struct node *ptr = *head;
 
-	if (!node)
-		return NULL;
-
-	/* header should point a new 1st node (last) */
-	if (!node->next) {
-		head->next = node;
-		return node;
+	while (ptr) {
+		ptr = ptr->next;
+		len++;
 	}
 
-	/* tmp is a next node from the original order */
-	tmp = reverse(node->next);
-	tmp->next = node;
-	return node;
+	return len;
 }
 
-void iter_reverse(void) {
-	struct list_node *prev, *curr, *next;
+int length_recur(struct node **head) {
+	struct node *ptr = *head;
+	int len = 0;
 
-	if (!head->next)
+	if (!ptr)
+		return 0;
+
+	len = 1 + length_recur(&ptr->next);
+	return len;
+}
+
+/* 
+ * reverse a linked list in recursive way
+ * 1. check wether the ptr is null or not. if null, return!
+ * 2. if ptr->next is null, head should set to ptr and return ptr
+ * 3. call the API in recursive way. pass "ptr->next" to make it traverse all the way down to last node
+ * 4. return of the API should be previous "node" ptr.
+ * 5. after return, prev node's next should set to "curr" node
+ */
+struct node* reverse_recur(struct node **head, struct node *ptr) {
+	struct node *tmp = NULL;
+
+	if (!ptr)
+		return NULL;
+
+	if (!ptr->next) {
+		*head = ptr;
+		return ptr;
+	}
+
+	tmp = reverse_recur(head, ptr->next);
+	tmp->next = ptr;
+
+	return ptr;
+}
+
+/*
+ * reverse the linked list in iterative way
+ * 1. set next to curr->next (which is next)
+ * 2. set curr->next to prev (set the next ptr in reverse way)
+ * 3. since curr is now previous, set prev to curr
+ * 4. move on curr to next. set curr to next
+ * 5. at the end of the loop, set head to prev
+ */
+void reverse_iter(struct node **head) {
+	struct node *prev, *curr, *next;
+
+	if (*head == NULL)
 		return;
 
-	/* initialization is key
-	 * curr -> first node in the list (not head)
-	 * next -> should be curr->next
-	 * prev - it should be null since it is at the beginning
-	 */
-	curr = head->next;
-	next = curr->next;
-	prev = NULL;
-
+	prev = next = NULL;
+	curr = *head;
 
 	while (curr) {
-		/* logic is simple.
-		 * next should always moved first. and pointing curr->next
-		 * curr->next is the one that has to be "reversed". reverse operation
-		 * works with "curr" only.
-		 * move curr to next
-		 * move prev to cur
-		 * Key is, prev and next is just moving and record the previous and next one
-		 * curr is the one to revsere the link
-		 */
 		next = curr->next;
 		curr->next = prev;
 		prev = curr;
 		curr = next;
 	}
 
-	/* head should point prev since curr is already NULL at this moment */
-	head->next = prev;
+	*head = prev;
 }
 
 int main(void) {
-	struct list_node *tmp;
+	struct node *head = NULL;
+	struct node *tmp = NULL;
 
-	head = (struct list_node *)malloc(sizeof(struct list_node));
-	head->next = NULL;
+	insert(&head, 1);
+	insert(&head, 2);
+	insert(&head, 3);
+	insert(&head, 4);
+	print(&head);
 
-	add (1);
-	add (2);
-	add (3);
-	add (4);
-	list();
-	tmp = reverse(head->next);
+	append(&head, 5);
+	append(&head, 6);
+
+	print(&head);
+
+	insert(&head, 7);
+
+	print(&head);
+
+	printf("2? = %s\n", search(&head, 2) ? "TRUE" : "FALSE");
+	printf("9? = %s\n", search(&head, 9) ? "TRUE" : "FALSE");
+
+	printf("list len(iter)  = %d\n", length_iter(&head));
+	printf("list len(recur) = %d\n", length_recur(&head));
+
+	tmp = reverse_recur(&head, head);
 	tmp->next = NULL;
-	list();
-	iter_reverse();
-	list();
+
+	print(&head);
+
+	reverse_iter(&head);
+	print(&head);
+
 	return 0;
 }
