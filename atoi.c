@@ -9,23 +9,15 @@
 
 #define MAX_DIGITS 10
 
-int is_valid_num(char *num) {
-	int i;
-	int len = strlen(num);
+int simple_atoi(char *num) {
+	int i = 0;
 
-	if (len > MAX_DIGITS) {
-		printf("too big number\n");
-		return FALSE;
+	while (*num) {
+		i = (i<<3) + (i<<1) + (*num - '0');
+		num++;
 	}
 
-	for (i = 0; i < len; i++) {
-		if (num[i] < '0' && num[i] > '9') {
-			printf("invalid charater. only numbers allowed\n");
-			return FALSE;
-		}
-	}
-
-	return TRUE;
+	return i;
 }
 
 int main(void) {
@@ -35,19 +27,15 @@ int main(void) {
 	int len = 0;
 
 	memset(num_str, 0, sizeof(num_str));
+
 	printf("Input a number: ");
 	scanf("%s", num_str);
 	getchar();
 
-	if (!is_valid_num(num_str))
-		return 1;
-
-	printf("%s\n", num_str);
 	len = strlen(num_str);
 
-	for (i = 0; i < len; i++)
-		number += (num_str[i] - '0') * pow(10, len-i-1);
-	
+	number = simple_atoi(num_str);
+
 	printf("%d\n", number);
 	
 	return 0;
